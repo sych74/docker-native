@@ -13,17 +13,20 @@ actions:
     cmd[${nodes.cp.master.id}]: ${settings.preHook}
    
   stackNameDeploy:
-    cmd[${nodes.cp.master.id}]: |-
-      url=${settings.yml}
-      url=$(echo ${url/\/blob\//\/raw\/})
-      project=$(echo ${url%/raw/*})
-      rawPath=$(echo ${url#"$project/raw/"})
-      branchAndPath=$(echo ${rawPath%/*.yml})
-      path=$(grep -q '/' <<< ${branchAndPath} && echo ${branchAndPath#*/} || echo '')
-      git clone $project.git >> ${globals.log}
-      IFS='/' read -r -a array <<< $project
-      cd ${array[4]}/$path
-      docker stack deploy -c $(basename $url) ${settings.stackName} >> ${globals.log}
+    - script: |-       
+        var url = "${settings.yml}".replace('blob/', '').replace("raw.githubusercontent.com", "github.com").split('/'),
+          file = url[url.length-1],
+          repo = url.splice(0,5).join('/'),
+          path;
+        path = url.splice(1);
+        path.pop();
+        path = path.join("/");
+        return {result: 0, repo: repo, path: path, file: file}
+        if (repo.indexOf(".git") == -1) repo += ".git";
+        return {result: 0, repo: repo, path: path, file: file}
+    - cmd[${nodes.cp.master.id}]: |-
+        git clone ${response.repo} application >> ${globals.log}
+        cd application/${response.path} && docker stack deploy -c ${response.file} ${settings.stackName} >> ${globals.log}
   stackDeploy:
     cmd[${nodes.cp.master.id}]: |-
       docker network create --driver overlay proxy
@@ -33,9 +36,18 @@ actions:
     cmd[${nodes.cp.master.id}]: |-
       docker service create --name demo --replicas $NBR_REPLICA --publish ${EXPOSED_PORT}:${SERVICE_PORT} ${SERVICE_IMAGE} >> ${globals.log}
   composeUp:
-    cmd[cp]: |-
-      git clone ${settings.repo} application >> ${globals.log}
-      cd application && docker-compose up -d >> ${globals.log}
+    - script: |-
+        var url = "${settings.repo}".replace('blob/', '').replace("raw.githubusercontent.com", "github.com").split('/'),
+            repo = url.splice(0,5).join('/'),
+            path;
+        path = url.splice(1);
+        path.pop();
+        path = path.join("/");
+        if (repo.indexOf(".git") == -1) repo += ".git";
+        return {result: 0, repo: repo, path: path}
+    - cmd[cp]: |-
+        git clone ${response.repo} application >> ${globals.log}
+        cd application/${response.path} && docker-compose up -d >> ${globals.log}
 responses:
   4109:
     type: error
