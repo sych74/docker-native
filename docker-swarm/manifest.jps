@@ -96,6 +96,8 @@ onInstall:
   - portainer
   - get-tokens
   
+onBeforeClone: stopEvent
+  
 actions:
   init-swarm:
     install: ${baseUrl}/docker-swarm-init.jps?_r=${fn.random}
