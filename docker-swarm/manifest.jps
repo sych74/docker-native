@@ -96,6 +96,21 @@ onInstall:
   - portainer
   - get-tokens
   
+onAfterClone:
+  - install: 
+      jps: ${baseUrl}/docker-swarm-init.jps?_r=${fn.random}
+      envName: ${event.response.env.envName}  
+      
+  - install:
+      jps: ${baseUrl}/docker-swarm-scaling.jps?_r=${fn.random}
+      envName: ${event.response.env.envName}  
+      settings:
+        baseUrl: ${baseUrl}
+        connect-node: ${globals.connect-node}
+        update-tokens: ${globals.update-tokens}
+        get-tokens: ${globals.get-tokens}
+      
+  
 actions:
   init-swarm:
     install: ${baseUrl}/docker-swarm-init.jps?_r=${fn.random}
