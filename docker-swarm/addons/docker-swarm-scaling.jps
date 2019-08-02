@@ -1,100 +1,59 @@
-{
-  "jpsType": "update",
-  "id": "docker-swarm-scaling",
-  "name": "Docker Swarm Scaling",
-  "onInstall": [
-    {
-      "script": "${settings.update-tokens}",
-      "nodeId": "${nodes.cp.master.id}"
-    },
-    {
-      "log": "Connecting Manager Nodes"
-    },
-    {
-      "forEach(nodes.cp)": {
-        "if (${@i.id} != ${nodes.cp.master.id})": {
-          "script": "${settings.connect-node}",
-          "params": {
-            "id": "${@i.id}",
-            "role": "manager"
-          }
-        }
-      }
-    },
-    {
-      "log": "Connecting Worker Nodes"
-    },
-    {
-      "forEach(nodes.worker)": {
-        "script": "${settings.connect-node}",
-        "id": "${@i.id}",
-        "role": "worker"
-      }
-    }
-  ],
-  "onAfterScaleOut[worker]": [
-    {
-      "script": "${settings.update-tokens}"
-    },
-    {
-      "forEach(event.response.nodes)": {
-        "script": "${settings.connect-node}",
-        "id": "${@i.id}",
-        "role": "worker"
-      }
-    }
-  ],
-  "onAfterScaleOut[cp]": [
-    {
-      "script": "${settings.update-tokens}"
-    },
-    {
-      "forEach(event.response.nodes)": {
-        "script": "${settings.connect-node}",
-        "params": {
-          "id": "${@i.id}",
-          "role": "manager"
-        }
-      }
-    }
-  ],
-  "onBeforeScaleIn[worker]": {
-    "forEach(event.response.nodes)": {
-      "removeNode": {
-        "id": "${@i.id}"
-      }
-    }
-  },
-  "onBeforeScaleIn[cp]": {
-    "forEach(event.response.nodes)": {
-      "removeNode": {
-        "id": "${@i.id}"
-      }
-    }
-  },
-  "actions": {
-    "connectNode": {
-      "cmd[${this.id}]": [
-        "docker swarm leave --force &>> /var/log/run.log",
-        "docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 >> /var/log/run.log"
-      ]
-    },
-    "removeNode": [
-      {
-        "cmd[${nodes.cp.master.id}]": [
-          "NODE=node${this.id}-${env.domain}",
-          "docker node demote $NODE &>> /var/log/run.log"
-        ]
-      },
-      {
-        "cmd[${this.id}]": "docker swarm leave --force &>> /var/log/run.log"
-      },
-      {
-        "cmd[${nodes.cp.master.id}]": [
-          "NODE=node${this.id}-${env.domain}",
-          "docker node rm --force $NODE &>> /var/log/run.log"
-        ]
-      }
-    ]
-  }
-}
+---
+type: update
+id: docker-swarm-scaling
+name: Docker Swarm Scaling
+onInstall:
+- script: ${settings.update-tokens}
+  nodeId: ${nodes.cp.master.id}
+- log: Connecting Manager Nodes
+- forEach(nodes.cp):
+    if (${@i.id} != ${nodes.cp.master.id}):
+      script: ${settings.connect-node}
+      params:
+        id: ${@i.id}
+        role: manager
+- log: Connecting Worker Nodes
+- forEach(nodes.worker):
+    script: ${settings.connect-node}
+    id: ${@i.id}
+    role: worker
+    
+onAfterScaleOut[worker]:
+- script: ${settings.update-tokens}
+- forEach(event.response.nodes):
+    script: ${settings.connect-node}
+    id: ${@i.id}
+    role: worker
+    
+onAfterScaleOut[cp]:
+- script: ${settings.update-tokens}
+- forEach(event.response.nodes):
+    script: ${settings.connect-node}
+    params:
+      id: ${@i.id}
+      role: manager
+      
+onBeforeScaleIn[worker]:
+  forEach(event.response.nodes):
+    removeNode:
+      id: ${@i.id}
+      
+onBeforeScaleIn[cp]:
+  forEach(event.response.nodes):
+    removeNode:
+      id: ${@i.id}
+      
+actions:
+  connectNode:
+    cmd[${this.id}]: |-
+      docker swarm leave --force &>> /var/log/run.log
+      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 >> /var/log/run.log
+    
+  removeNode:
+    - cmd[${nodes.cp.master.id}]:
+        NODE=node${this.id}-${env.domain}
+        docker node demote $NODE &>> /var/log/run.log
+    - cmd[${this.id}]: docker swarm leave --force &>> /var/log/run.log
+    - cmd[${nodes.cp.master.id}]:
+        NODE=node${this.id}-${env.domain}
+        docker node rm --force $NODE &>> /var/log/run.log
