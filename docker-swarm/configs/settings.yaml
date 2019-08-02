@@ -1,0 +1,48 @@
+  fields:  
+  - type: spinner
+    name: mngr
+    caption: Manager
+    min: 1
+    max: 10
+    default: 1
+  - type: spinner
+    name: worker
+    caption: Worker
+    min: 1
+    max: 10
+    default: 1
+    
+  - name: stack
+    type: radio-fieldset
+    values:
+      clean: Clean Cluster
+      deploy: Deploy Stack YML
+    default: clean
+    showIf:
+      deploy:
+        - name: yml
+          type: string
+          caption: Stack YML URL
+          default: https://github.com/jelastic/example-voting-app/blob/master/docker-stack.yml
+          required: true
+          vtype: url
+        - name: stackName
+          type: string
+          caption: Stack Name
+          default: example
+          required: true
+        - name: preHook
+          type: string
+          caption: Pre Hook
+          inputType: hidden
+
+      clean:
+        name: portainer
+        type: checkbox
+        caption: Install <a href='https://portainer.io' target='_blank'>Portainer UI</a> - lightweight container management
+        value: false
+        
+  - name: autoscaling
+    type: checkbox
+    caption: Enable Horizontal Auto-Scaling
+    value: true   
