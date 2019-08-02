@@ -10,17 +10,18 @@ onInstall:
     
 actions:
   swarmRestore:
-    cmd[${nodes.cp.master.id}]: |-
-      service docker stop >> /var/log/run.log
-      mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
-      service docker start >> /var/log/run.log
-      docker swarm init ${this.address} >> /var/log/run.log
-      service docker stop >> /var/log/run.log
-      yes | cp -rf /var/lib/docker/swarm/*state.json /var/lib/docker/swarm_backup/
-      rm -rf /var/lib/docker/swarm
-      mv /var/lib/docker/swarm_backup /var/lib/docker/swarm
-      rm -rf /var/lib/docker/containers/*
-      service docker start >> /var/log/run.log
-      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
-      for i in $nodes; do docker node rm $i; done
-
+    - cmd[cp,worker]: |-
+        rm -rf /var/lib/docker/swarm_backup
+        rm -rf /var/lib/docker/containers/*
+        mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
+        service docker start >> /var/log/run.log
+      
+    - cmd[${nodes.cp.master.id}]: |-
+        docker swarm init ${this.address} >> /var/log/run.log
+        service docker stop >> /var/log/run.log
+        yes | cp -rf /var/lib/docker/swarm/*state.json /var/lib/docker/swarm_backup/
+        rm -rf /var/lib/docker/swarm
+        mv /var/lib/docker/swarm_backup /var/lib/docker/swarm
+        service docker start >> /var/log/run.log
+        nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
+        for i in $nodes; do docker node rm $i; done
