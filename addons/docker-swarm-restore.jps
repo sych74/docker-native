@@ -20,4 +20,5 @@ actions:
       service docker stop >> /var/log/run.log
       rm -rf /var/lib/docker/swarm
       mv /var/lib/docker/swarm_backup /var/lib/docker/swarm
+      rm -rf /var/lib/docker/containers/*
       service docker start >> /var/log/run.log
