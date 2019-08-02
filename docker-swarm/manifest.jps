@@ -98,12 +98,12 @@ onInstall:
   
 onAfterClone:
   - install: 
-      jps: ${baseUrl}/docker-swarm-init.jps?_r=${fn.random}
-      envName: ${event.response.env.envName}  
+      jps: ${baseUrl}/docker-swarm-restore.jps?_r=${fn.random}
+      envName: ${event.response.env.envName}
       
   - install:
       jps: ${baseUrl}/docker-swarm-scaling.jps?_r=${fn.random}
-      envName: ${event.response.env.envName}  
+      envName: ${event.response.env.envName}
       settings:
         baseUrl: ${baseUrl}
         connect-node: ${globals.connect-node}
