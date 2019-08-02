@@ -16,6 +16,7 @@ actions:
       service docker start >> /var/log/run.log
       docker swarm init ${this.address} >> /var/log/run.log
       service docker stop >> /var/log/run.log
+      yes | cp -rf /var/lib/docker/swarm/*state.json /var/lib/docker/swarm_backup/
       rm -rf /var/lib/docker/swarm
       mv /var/lib/docker/swarm_backup /var/lib/docker/swarm
       rm -rf /var/lib/docker/containers/*
