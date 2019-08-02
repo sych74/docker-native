@@ -15,7 +15,10 @@ actions:
         rm -rf /var/lib/docker/containers/*
         mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
         service docker start >> /var/log/run.log
-      
+    - return:
+        type: error
+        message: debug
+    
     - cmd[${nodes.cp.master.id}]: |-
         docker swarm leave --force &>> /var/log/run.log
         docker swarm init ${this.address} >> /var/log/run.log
