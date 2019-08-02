@@ -15,10 +15,11 @@ actions:
       mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
       service docker start >> /var/log/run.log
       docker swarm init --force-new-cluster ${this.address} >> /var/log/run.log
-      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
-      for i in $nodes; do docker node rm $i; done
       service docker stop >> /var/log/run.log
       rm -rf /var/lib/docker/swarm
       mv /var/lib/docker/swarm_backup /var/lib/docker/swarm
       rm -rf /var/lib/docker/containers/*
       service docker start >> /var/log/run.log
+      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
+      for i in $nodes; do docker node rm $i; done
+
