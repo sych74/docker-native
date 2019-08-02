@@ -14,6 +14,7 @@ actions:
       service docker stop >> /var/log/run.log
       mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
       service docker start >> /var/log/run.log
+      docker swarm leave --force &>> /var/log/run.log
       docker swarm init ${this.address} >> /var/log/run.log
       service docker stop >> /var/log/run.log
       rm -rf /var/lib/docker/swarm
