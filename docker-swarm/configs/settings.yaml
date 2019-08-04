@@ -42,10 +42,8 @@
         caption: Install <a href='https://portainer.io' target='_blank'>Portainer UI</a> - lightweight container management
         value: false
         
-  - name: autoscaling
-    type: checkbox    
-    caption: Enable Horizontal Auto-Scaling
-    value: false  
-    inputType: hidden
-    hideLabel: true
+#  - name: autoscaling
+#    type: checkbox    
+#    caption: Enable Horizontal Auto-Scaling
+#    value: false  
     
