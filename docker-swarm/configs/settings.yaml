@@ -47,5 +47,5 @@
     caption: Enable Horizontal Auto-Scaling
     value: false  
     inputType: hidden
-    hideLabel: false
+    hideLabel: true
     
