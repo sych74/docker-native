@@ -1,13 +1,13 @@
   fields:  
   - type: spinner
     name: mngr
-    caption: Manager
+    caption: Manager Nodes
     min: 1
     max: 10
     default: 1
   - type: spinner
     name: worker
-    caption: Worker
+    caption: Worker Nodes
     min: 1
     max: 10
     default: 1
