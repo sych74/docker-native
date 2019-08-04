@@ -6,10 +6,8 @@ name: Docker Swarm Init
 onInstall:
 - log: Swarm Init
 - swarmInit:
-    address: --advertise-addr 127.0.0.1
-#    address: --advertise-addr ${nodes.cp.master.intIP}
-    
-    
+    address: --advertise-addr ${nodes.cp.master.intIP}
+
 actions:
   swarmInit:
     cmd[${nodes.cp.master.id}]: |-
