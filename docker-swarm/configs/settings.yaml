@@ -44,5 +44,6 @@
         
   - name: autoscaling
     type: checkbox
+    inputType: hidden
     caption: Enable Horizontal Auto-Scaling
-    value: true   
+    value: false   
