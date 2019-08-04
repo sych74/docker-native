@@ -1,9 +1,8 @@
 type: install
-version: 1.1
 id: docker-swarm-ce
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/docker-native/master/addons
+baseUrl: https://raw.githubusercontent.com/sych74/docker-native/master/docker-swarm
 description:
-  text: /text/description-swarm.md
+  text: /text/description.md
   short: Docker Swarm Cluster with out-of-box auto-clustering and auto-scaling
 categories:
   - apps/clusters
@@ -16,123 +15,94 @@ targetRegions:
 globals:
   connect-node: ${baseUrl}/scripts/connect-swarm-node.js?_r=${fn.random}
   update-tokens: ${baseUrl}/scripts/update-swarm-tokens.js?_r=${fn.random}
-  get-tokens: ${baseUrl}/scripts/get-swarm-tokens.js?_r=${fn.random}
+  get-tokens: /scripts/get-swarm-tokens.js?_r=${fn.random}
   startPage: http://${env.domain}/
+ 
+onBeforeInit: |
+  var url = "https://registry.hub.docker.com/v1/repositories/jelastic/docker-ce/tags";
+  var tags = toNative(new com.hivext.api.core.utils.Transport().get(url)).sort();
+  var ver = {},
+      numDef = "", def = "";
+  for (var i = 0; i < tags.length; i++) {
+      var name = tags[i].name,
+      numName = name.replace(/\./g, "");      
+      ver[tags[i].name] = name;
+      if (!isNaN(numName) && numName > numDef) {
+        numDef = numName;
+        def = name;
+      }
+  }
+  
+  var resp = {result:0};
+  var url = "https://raw.githubusercontent.com/sych74/docker-native/master/docker-swarm/configs/settings.yaml?_r=${fn.random}";
+  resp.settings = toNative(new org.yaml.snakeyaml.Yaml().load(new com.hivext.api.core.utils.Transport().get(url)));  
+  resp.settings.fields.unshift({
+    name: "version",
+    caption: "Docker Version",
+    type: "list",
+    values: ver,
+    width: 100,
+    "default": def
+  });
+  return resp;
 
-settings:
-  fields:  
-  - type: spinner
-    name: mngr
-    caption: Manager
-    min: 1
-    max: 10
-    default: 1
-  - type: spinner
-    name: worker
-    caption: Worker
-    min: 1
-    max: 10
-    default: 1
-    
-  - name: stack
-    type: radio-fieldset
-    values:
-      clean: Clean Cluster
-      deploy: Deploy Stack YML
-    default: clean
-    showIf:
-      deploy:
-        - name: yml
-          type: string
-          caption: Stack YML URL
-          default: https://github.com/jelastic/example-voting-app/blob/master/docker-stack.yml
-          required: true
-          vtype: url
-        - name: stackName
-          type: string
-          caption: Stack Name
-          default: example
-          required: true
-        - name: preHook
-          type: string
-          caption: Pre Hook
-          inputType: hidden
-
-      clean:
-        name: portainer
-        type: checkbox
-        caption: Install <a href='https://portainer.io' target='_blank'>Portainer UI</a> - lightweight container management
-        value: false
-        
-  - name: autoscaling
-    type: checkbox
-    caption: Enable Horizontal Auto-Scaling
-    value: true    
-        
 nodes:
   - count: ${settings.mngr}
     cloudlets: 32
-    image: jelastic/docker-ce
+    image: jelastic/docker-ce:${settings.version}
     nodeGroup: cp
     displayName: Manager
     env:
       JELASTIC_EXPOSE: false
+    
   - count: ${settings.worker}
     nodeGroup: worker
-    image: jelastic/docker-ce
+    image: jelastic/docker-ce:${settings.version}
     displayName: Worker
     cloudlets: 32
     env:
       JELASTIC_EXPOSE: false
- 
+
 skipNodeEmails: true
  
 onInstall:
   - addExtIp
   - init-swarm
-  - scaling-events
-  - if (${settings.autoscaling}): scaling-triggers
+  - build-cluster
+  - if (${settings.autoscaling:false}): scaling-triggers
   - if ('${settings.stack}' == 'deploy'): deploy
   - portainer
   - get-tokens
   
-onAfterClone:
-  - install: 
-      jps: ${baseUrl}/docker-swarm-restore.jps?_r=${fn.random}
-      envName: ${event.response.env.envName}
-      
-  - install:
-      jps: ${baseUrl}/docker-swarm-scaling.jps?_r=${fn.random}
-      envName: ${event.response.env.envName}
-      settings:
-        baseUrl: ${baseUrl}
-        connect-node: ${globals.connect-node}
-        update-tokens: ${globals.update-tokens}
-        get-tokens: ${globals.get-tokens}
-      
-  
+onBeforeClone: stopEvent
+#onAfterClone:
+#  - install: 
+#      jps: /addons/docker-swarm-restore.jps?_r=${fn.random}
+#      envName: ${event.response.env.envName}      
+#  - build-cluster: ${event.response.env.envName}
+
 actions:
   init-swarm:
-    install: ${baseUrl}/docker-swarm-init.jps?_r=${fn.random}
+    install: /addons/docker-swarm-init.jps?_r=${fn.random}
     
-  scaling-events:
+  build-cluster:    
     install:
-      jps: ${baseUrl}/docker-swarm-scaling.jps?_r=${fn.random}
+      jps: /addons/docker-swarm-scaling.jps?_r=${fn.random}
+      envName: ${this:}
       settings:
-        baseUrl: ${baseUrl}
-        connect-node: ${globals.connect-node}
         update-tokens: ${globals.update-tokens}
-        get-tokens: ${globals.get-tokens}
+        connect-node: ${globals.connect-node}
         
   scaling-triggers:
     install:
-      jps: ${baseUrl}/autoscaling-triggers.jps?_r=${fn.random}
+      jps: ../addons/autoscaling-triggers.jps?_r=${fn.random}
       settings:
         mngr: ${settings.mngr}
         worker: ${settings.worker}
+        
   deploy:
     - install:
-        jps: ${baseUrl}/docker-deploy.jps?_r=${fn.random}
+        jps: ../addons/docker-deploy.jps?_r=${fn.random}
         settings:
           yml: ${settings.yml}
           stackName: ${settings.stackName}
@@ -149,34 +119,28 @@ actions:
         
   get-tokens:
     script: ${globals.get-tokens}
-    next: no-ssh-keys
+    next: succes-message
     
-  no-ssh-keys:
-    - send-success:
+  succes-message:
+    - setGlobals:
         manager_token: ${this.manager}
         worker_token: ${this.worker}
-        name: swarm-success-no-ssh-keys.md
+    - send-success
       
   send-success: 
     script: |
-        import com.hivext.api.core.utils.Transport;
-        var text = new Transport().get('${baseUrl}/text/${this.name}?_r=${fn.random}').replace('${globals.manager_token}', '${this.manager_token}').replace('${globals.worker_token}', '${this.worker_token}')
-        return {type:'success', message:text, email:text}
+        return {type:'success', message:'/text/success.md', email:'/text/success.md'}
 
   portainer:
     if ('${settings.portainer}' == 'true'):
       - install:
-          jps: ${baseUrl}/portainer.jps?_r=${fn.random}
+          jps: ../addons/portainer.jps?_r=${fn.random}
           settings:
             mode: swarm
       - setGlobals:
           startPage: https://${env.domain}:4848/
 
   addExtIp:
-    script: ${baseUrl}/scripts/attach-external-ip.js?_r=${fn.random}
+    script: ../addons/scripts/attach-external-ip.js?_r=${fn.random}
 
 startPage: ${globals.startPage}
-
-success:
-  text: /text/swarm-success-no-ssh-keys.md
-  email: /text/swarm-success-no-ssh-keys.md
