@@ -1,1 +1,0 @@
-Use it to perform *docker build*, *docker run*, *docker-compose up* and *docker swarm join*. For *docker swarm* and *docker stack*, use auto-scalable Docker Swarm cluster from the [dedicated package](https://github.com/jelastic-jps/docker-native/tree/master/docker-swarm).
