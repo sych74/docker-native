@@ -97,6 +97,7 @@ onInstall:
   - get-tokens
   
 onBeforeClone: stopEvent
+onBeforeMigrate: stopEvent
   
 actions:
   init-swarm:
