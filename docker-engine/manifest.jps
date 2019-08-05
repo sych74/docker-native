@@ -1,10 +1,9 @@
 ---
 type: install
-version: 1.1
 id: docker-engine-ce
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/docker-native/master/addons
+baseUrl: https://raw.githubusercontent.com/sych74/docker-native/master/docker-engine
 description:
-  text: /text/description-engine.md
+  text: /text/description.md
   short: Automatic Installation of Docker Engine (CE) as a Standalone or Worker Node
 categories:
   - apps/dev-and-admin-tools
@@ -85,7 +84,6 @@ onInstall:
   - deploy
   - connect-to-swarm
   - portainer
-  - no-ssh-keys
   
 onAfterScaleOut[${settings.role}]: connect-to-swarm
 
@@ -116,16 +114,10 @@ actions:
     if ('${settings.role}' == 'worker'):
       setNodeDisplayName[${this.filter}]: Worker
     
-  no-ssh-keys:
-    return:
-      type: success
-      message: /text/engine-success-no-ssh-keys.md
-      email: /text/engine-success-no-ssh-keys.md
-      
   portainer:
     if ('${settings.portainer}' == 'true'):
       - install:
-          jps: ${baseUrl}/portainer.jps?_r=${fn.random}
+          jps: ../addons/portainer.jps?_r=${fn.random}
           settings:
             mode: engine
       - setGlobals:
@@ -133,10 +125,8 @@ actions:
 
   addExtIp:
     if ('${settings.role}' == 'cp'):
-      script: ${baseUrl}/scripts/attach-external-ip.js?_r=${fn.random}
+      script: ../addons/scripts/attach-external-ip.js?_r=${fn.random}
 
 startPage: ${globals.startPage}
  
-success:
-  text: /text/engine-success-no-ssh-keys.md
-  email: /text/engine-success-no-ssh-keys.md
+success: /text/success.md
