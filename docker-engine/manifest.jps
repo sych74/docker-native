@@ -47,7 +47,8 @@ onBeforeInit: |
 nodes:
 - count: 1
   cloudlets: 32
-  image: jelastic/docker-ce:${settings.version}
+  nodeType: dockerengine
+  tag: ${settings.version}
   nodeGroup: ${settings.role}
   displayName: Engine Node
   env:

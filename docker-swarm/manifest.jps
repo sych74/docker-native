@@ -49,7 +49,8 @@ onBeforeInit: |
 nodes:
   - count: ${settings.mngr}
     cloudlets: 32
-    image: jelastic/docker-ce:${settings.version}
+    nodeType: dockerengine
+    tag: ${settings.version}
     nodeGroup: cp
     displayName: Manager
     env:
@@ -57,7 +58,8 @@ nodes:
     
   - count: ${settings.worker}
     nodeGroup: worker
-    image: jelastic/docker-ce:${settings.version}
+    nodeType: dockerengine
+    tag: ${settings.version}
     displayName: Worker
     cloudlets: 32
     env:
