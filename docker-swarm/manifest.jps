@@ -18,39 +18,66 @@ globals:
   get-tokens: /scripts/get-swarm-tokens.js?_r=${fn.random}
   startPage: http://${env.domain}/
  
-onBeforeInit: |
-  var url = "https://registry.hub.docker.com/v1/repositories/jelastic/docker-ce/tags";
-  var tags = toNative(new com.hivext.api.core.utils.Transport().get(url)).sort();
-  var ver = {},
-      numDef = "", def = "";
-  for (var i = 0; i < tags.length; i++) {
-      var name = tags[i].name,
-      numName = name.replace(/\./g, "");      
-      ver[tags[i].name] = name;
-      if (!isNaN(numName) && numName > numDef) {
-        numDef = numName;
-        def = name;
-      }
-  }
-  
-  var resp = {result:0};
-  var url = "https://raw.githubusercontent.com/sych74/docker-native/master/docker-swarm/configs/settings.yaml?_r=${fn.random}";
-  resp.settings = toNative(new org.yaml.snakeyaml.Yaml().load(new com.hivext.api.core.utils.Transport().get(url)));  
-  resp.settings.fields.unshift({
-    name: "version",
-    caption: "Docker Version",
-    type: "list",
-    values: ver,
-    width: 100,
-    "default": def
-  });
-  return resp;
+settings: 
+  fields:  
+  - type: nodetags      
+    nodeType: dockerengine
+    caption: Docker Version
+    name: tag  
+    width: 100
+  - type: spinner
+    name: mngr
+    caption: Manager Nodes
+    min: 1
+    max: 10
+    default: 1
+  - type: spinner
+    name: worker
+    caption: Worker Nodes
+    min: 1
+    max: 10
+    default: 1
+    
+  - name: stack
+    type: radio-fieldset
+    values:
+      clean: Clean Cluster
+      deploy: Deploy Stack YML
+    default: clean
+    showIf:
+      deploy:
+        - name: yml
+          type: string
+          caption: Stack YML URL
+          default: https://github.com/jelastic/example-voting-app/blob/master/docker-stack.yml
+          required: true
+          vtype: url
+        - name: stackName
+          type: string
+          caption: Stack Name
+          default: example
+          required: true
+        - name: preHook
+          type: string
+          caption: Pre Hook
+          inputType: hidden
+
+      clean:
+        name: portainer
+        type: checkbox
+        caption: Install <a href='https://portainer.io' target='_blank'>Portainer UI</a> - lightweight container management
+        value: false
+        
+#  - name: autoscaling
+#    type: checkbox    
+#    caption: Enable Horizontal Auto-Scaling
+#    value: false  
 
 nodes:
   - count: ${settings.mngr}
     cloudlets: 32
     nodeType: dockerengine
-    tag: ${settings.version}
+    tag: ${settings.tag}
     nodeGroup: cp
     displayName: Manager
     env:
@@ -59,7 +86,7 @@ nodes:
   - count: ${settings.worker}
     nodeGroup: worker
     nodeType: dockerengine
-    tag: ${settings.version}
+    tag: ${settings.tag}
     displayName: Worker
     cloudlets: 32
     env:
