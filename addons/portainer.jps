@@ -49,7 +49,7 @@ actions:
       openssl genrsa -out ~/.ssh/certs/portainer.key 2048
       openssl ecparam -genkey -name secp384r1 -out ~/.ssh/certs/portainer.key
       openssl req -new -x509 -sha256 -key ~/.ssh/certs/portainer.key -out ~/.ssh/certs/portainer.crt -days 3650 -subj "/CN=${env.domain}"
-        
+
 success: |
   **Portainer UI**: [https://${env.domain}:4848](https://${env.domain}:4848)  
   **User**: ${globals.user}  
