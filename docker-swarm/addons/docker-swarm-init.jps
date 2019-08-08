@@ -1,15 +1,96 @@
----
-jpsType: update
+type: update
 id: docker-swarm-init
 name: Docker Swarm Init
 
 onInstall:
-- log: Swarm Init
-- swarmInit:
-    address: --advertise-addr ${nodes.cp.master.intIP}
+  - log: Swarm Init
+  - env.control.ExecDockerRunCmd[*]
+  - init-swarm
+  - build-cluster
+
+onAfterScaleOut[worker]:
+  - get-ids: event.response.nodes
+  - get-worker-token
+  - connectNode: 
+      id: ${globals.ids}
+      token: ${globals.worker-token}
+
+onAfterScaleOut[cp]:
+  - get-ids: event.response.nodes
+  - get-manager-token
+  - connectNode: 
+      id: ${globals.ids}
+      token: ${globals.manager-token}
+
+onBeforeScaleIn[cp]:
+  - get-ids: event.response.nodes
+  - removeNode:
+      id: ${globals.ids}
+
+onBeforeScaleIn[worker]:
+  - get-ids: event.response.nodes
+  - removeNode:
+      id: ${globals.ids}
 
 actions:
-  swarmInit:
+  init-swarm:
     cmd[${nodes.cp.master.id}]: |-
+      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
+      for n in $nodes; do docker node rm $n; done    
       docker swarm leave --force &>> /var/log/run.log
-      docker swarm init ${this.address} >> /var/log/run.log
+      docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
+      
+  get-ids:
+    - setGlobals: 
+        ids: ''
+        sep: ''
+    - forEach(${this}):
+        if (${@i.id} != ${nodes.cp.master.id}):
+          add-id: ${@i.id}
+
+  add-id:
+    setGlobals: 
+      ids: ${globals.ids:}${globals.sep:}${this}
+      sep: ','
+      
+  build-cluster:    
+    - log: Connecting Manager Nodes
+    - get-ids: nodes.cp
+    - get-manager-token
+    - connectNode: 
+        id: ${globals.ids}
+        token: ${globals.manager-token}
+        
+    - log: Connecting Worker Nodes
+    - get-worker-token
+    - connectNode: 
+        id: worker
+        token: ${globals.worker-token}
+     
+  get-manager-token: 
+    - cmd[${nodes.cp.master.id}]: docker swarm join-token -q manager
+    - setGlobals:
+        manager-token: ${response.out}
+        
+  get-worker-token: 
+    - cmd[${nodes.cp.master.id}]: docker swarm join-token -q worker
+    - setGlobals:
+        worker-token: ${response.out}
+  
+  connectNode:
+    cmd[${this.id}]: |-
+      docker swarm leave --force &>> /var/log/run.log
+      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 >> /var/log/run.log
+    
+  removeNode:
+    - cmd[${nodes.cp.master.id}]: |-
+        IFS=',' read -ra node <<< ${this.id}
+        for id in "${node[@]}"; do
+          docker node demote node$id-${env.domain} &>> /var/log/run.log
+        done
+    - cmd[${this.id}]: docker swarm leave --force &>> /var/log/run.log
+    - cmd[${nodes.cp.master.id}]: |-
+        IFS=',' read -ra node <<< ${this.id}
+        for id in "${node[@]}"; do
+          docker node rm --force node$id-${env.domain} &>> /var/log/run.log    
+        done
