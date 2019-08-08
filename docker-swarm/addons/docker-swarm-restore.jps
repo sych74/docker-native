@@ -16,6 +16,8 @@ actions:
 #        mv /var/lib/docker/swarm /var/lib/docker/swarm_backup
 #        service docker start >> /var/log/run.log
     - env.control.ExecDockerRunCmd[*]
+    - cmd[${nodes.cp.master.id}]: |-
+        docker swarm init --force-new-cluster ${this.address} >> /var/log/run.log
     
 #    - cmd[${nodes.cp.master.id}]: |-
 #        service docker stop >> /var/log/run.log
