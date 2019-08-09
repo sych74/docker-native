@@ -42,10 +42,8 @@ actions:
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
       echo -e "\n\n-------------\n$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> /var/log/run.log
-      #docker swarm leave --force &>> /var/log/run.log
       docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
-      docker node ls
-      nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
+      nodes=$(docker node ls | awk '/Down|Unknown/' | awk '{print $1}')
       for n in $nodes; do docker node rm $n; done    
       
   get-ids:
