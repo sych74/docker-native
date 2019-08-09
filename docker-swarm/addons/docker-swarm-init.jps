@@ -10,15 +10,16 @@ onInstall:
   - log: Swarm Init
   - init-swarm
   #giving some time for cluster recovery after clone 
-  - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1): 
-      sleep: 10000
+  - if ("${settings.oldIntIPs:}"): 
+      cmd[${nodes.cp.master.id}]: service docker restart
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
   - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1):
-      - cmd[${nodes.cp.master.id}]: |-
-          docker swarm leave --force &>> /var/log/run.log
-          docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
-      - nat: D
+    - if (nodes.cp.length > 1):
+      cmd[${nodes.cp.master.id}]: |-
+        docker swarm leave --force &>> /var/log/run.log
+        docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
+    - nat: D
 
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
