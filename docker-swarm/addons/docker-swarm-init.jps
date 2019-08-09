@@ -18,6 +18,18 @@ onInstall:
         docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
     - nat: D
 
+onAfterClone:
+  - get-ips: nodes.cp
+  - install: 
+      jps: ${globals.swarmInit}
+      envName: ${event.response.env.envName}      
+      settings: 
+        oldIntIPs: ${globals.ips}
+
+onAfterMigrate:
+  if (!${event.params.isOnline}):
+    install: ${globals.swarmInit}
+
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
   - get-worker-token
@@ -70,6 +82,18 @@ actions:
   add-id:
     setGlobals: 
       ids: ${globals.ids:}${globals.sep:}${this}
+      sep: ','
+      
+  get-ips:
+    - setGlobals: 
+        ips: ''
+        sep: ''
+    - forEach(${this}):
+        add-ip: ${@i.intIP}
+
+  add-ip:
+    setGlobals: 
+      ips: ${globals.ips:}${globals.sep:}${this}
       sep: ','
       
   build-cluster:    
