@@ -1,7 +1,7 @@
 type: update
 id: docker-swarm-init
 name: Docker Swarm Init
-
+baseUrl: https://raw.githubusercontent.com/sych74/docker-native/master/docker-swarm/addons
 onInstall:
   #blocking requests to the old swarm
   - if ("${settings.oldIntIPs:}"):
@@ -22,14 +22,14 @@ onAfterClone:
   - get-ips: nodes.cp
   - log: baseUrl = ${baseUrl}
   - install: 
-      jps: ${baseUrl}/docker-swarm-init.jps
+      jps: /docker-swarm-init.jps
       envName: ${event.response.env.envName}      
       settings: 
         oldIntIPs: ${globals.ips}
 
 onAfterMigrate:
   if (!${event.params.isOnline}):
-    install: ${baseUrl}/docker-swarm-init.jps
+    install: /docker-swarm-init.jps
 
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
