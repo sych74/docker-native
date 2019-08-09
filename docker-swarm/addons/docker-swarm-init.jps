@@ -9,8 +9,8 @@ onInstall:
         for ip in "${ips[@]}"; do
           iptables -t nat -A OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
         done
-  - log: Swarm Init
   - env.control.ExecDockerRunCmd[*]
+  - log: Swarm Init
   - init-swarm
   - build-cluster
 
@@ -41,6 +41,7 @@ onBeforeScaleIn[worker]:
 actions:
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
+      echo "$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> /var/log/run.log
       #docker swarm leave --force &>> /var/log/run.log
       docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
       nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
