@@ -14,7 +14,7 @@ onInstall:
   - init-swarm
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
-  - if (false && "${globals.clone:false}" && nodes.cp.length > 1):
+  - if (${globals.clone:false} && nodes.cp.length > 1):
     - if (nodes.cp.length > 1):
       cmd[${nodes.cp.master.id}]: |-
         docker swarm leave --force &>> /var/log/run.log
