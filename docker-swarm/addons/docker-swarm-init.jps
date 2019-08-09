@@ -104,7 +104,7 @@ actions:
     #extra 'swarm leave' - workaround against sporadic after clone 'Error response from daemon: context deadline exceeded'
     - if ("${settings.oldIntIPs:}"):
         cmd[${globals.ids}]: |-
-          docker swarm leave --force &>> /var/log/run.log || echo "LEAVE ERROR: check /var/log/run.log"
+          docker swarm leave --force &>> /var/log/run.log || echo "LEAVE ERR: check /var/log/run.log"
     - connectNode: 
         id: ${globals.ids}
         token: ${globals.manager-token}
@@ -127,9 +127,9 @@ actions:
   
   connectNode:
     cmd[${this.id}]: |-
-      docker swarm leave --force &>> /var/log/run.log
+      leave="docker swarm leave --force"
       join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
-      $join >> /var/log/run.log || { service docker restart && sleep 10 && { $join &>> /var/log/run.log || echo "JOIN ERROR: check /var/log/run.log"; } }
+      $join >> /var/log/run.log || { service docker restart && sleep 10 && { $leave &>> /var/log/run.log && $join &>> /var/log/run.log || echo "JOIN ERR: check /var/log/run.log"; } }
       
   removeNode:
     - cmd[${nodes.cp.master.id}]: |-
