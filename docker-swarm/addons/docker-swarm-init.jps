@@ -3,8 +3,11 @@ id: docker-swarm-init
 name: Docker Swarm Init
 
 onInstall:
-  - if ("${settings.oldIntIP:}"):
-      cmd[cp,worker]: iptables -t nat -A OUTPUT -p tcp -d ${settings.oldIntIP} -j DNAT --to-destination ${nodes.cp.master.intIP}  
+  - if ("${settings.oldIntIPs:}"):
+      IFS=',' read -ra ips <<< ${settings.oldIntIPs:}
+      for ip in "${ips[@]}"; do
+        cmd[cp,worker]: iptables -t nat -A OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
+      done
   - log: Swarm Init
   - env.control.ExecDockerRunCmd[*]
   - init-swarm
