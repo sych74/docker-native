@@ -78,7 +78,8 @@ actions:
     - get-manager-token
     #extra 'swarm leave' - workaround against sporadic after clone 'Error response from daemon: context deadline exceeded'
     - if ("${settings.oldIntIPs:}"):
-        cmd[${globals.ids}]: docker swarm leave --force &>> /var/log/run.log || echo "LEAVE ERROR: check /var/log/run.log"
+        cmd[${globals.ids}]: |-
+        	docker swarm leave --force &>> /var/log/run.log || echo "LEAVE ERROR: check /var/log/run.log"
     - connectNode: 
         id: ${globals.ids}
         token: ${globals.manager-token}
