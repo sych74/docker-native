@@ -7,7 +7,7 @@ onInstall:
   - if (${settings.clone:false}):
       - cmd[${nodes.cp.master.id}]: grep -oP 'addr":"\K.*?(?=:2377)' < /var/lib/docker/swarm/state.json | paste -s -d,
       - setGlobals:
-          oldIntIPs: ${reponse.out}
+          oldIntIPs: ${response.out}
       - nat: A
   - env.control.ExecDockerRunCmd[*]
   - log: Swarm Init
