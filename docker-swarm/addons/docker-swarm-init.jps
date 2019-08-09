@@ -4,14 +4,18 @@ name: Docker Swarm Init
 baseUrl: https://raw.githubusercontent.com/sych74/docker-native/master/docker-swarm/addons
 onInstall:
   #blocking requests to the old swarm
-  - if ("${settings.oldIntIPs:}"):
+  - if (${settings.clone:false}):
+      - cmd[${nodes.cp.master.id}]: grep -oP 'addr":"\K.*?(?=:2377)' < /var/lib/docker/swarm/state.json | paste -s -d,
+      - setGlobals:
+          oldIntIPs: ${reponse.out}
+  - if ("${globals.clone:false}"):
       nat: A
   - env.control.ExecDockerRunCmd[*]
   - log: Swarm Init
   - init-swarm
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
-  - if (false && "${settings.oldIntIPs:}" && nodes.cp.length > 1):
+  - if (false && "${globals.clone:false}" && nodes.cp.length > 1):
     - if (nodes.cp.length > 1):
       cmd[${nodes.cp.master.id}]: |-
         docker swarm leave --force &>> /var/log/run.log
@@ -25,7 +29,7 @@ onAfterClone:
       jps: /docker-swarm-init.jps
       envName: ${event.response.env.envName}      
       settings: 
-        oldIntIPs: ${globals.ips}
+        clone: true
 
 onAfterMigrate:
   if (!${event.params.isOnline}):
@@ -58,7 +62,7 @@ onBeforeScaleIn[worker]:
 actions:
   nat:
     cmd[cp,worker]: |-
-      IFS=',' read -ra ips <<< ${settings.oldIntIPs:}
+      IFS=',' read -ra ips <<< ${globals.oldIntIPs:}
       for ip in "${ips[@]}"; do
         iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
       done
@@ -99,7 +103,7 @@ actions:
     - get-ids: nodes.cp
     - get-manager-token
     #extra 'swarm leave' - workaround against sporadic after clone 'Error response from daemon: context deadline exceeded'
-    - if ("${settings.oldIntIPs:}"):
+    - if ("${settings.clone:false}"):
         cmd[${globals.ids}]: |-
           docker swarm leave --force &>> /var/log/run.log || echo "LEAVE ERR: check /var/log/run.log"
     - connectNode: 
@@ -112,7 +116,7 @@ actions:
         id: worker
         token: ${globals.worker-token}
     #remove old cluster nodes 
-    - if ("${settings.oldIntIPs:}"):
+    - if ("${settings.clone:false}"):
         - sleep: 10000
         - cmd[${nodes.cp.master.id}]: |-
             nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
