@@ -102,10 +102,10 @@ actions:
   
   connectNode:
     cmd[${this.id}]: |-
-      sleep $(shuf -i 0-10 -n 1)
       docker swarm leave --force &>> /var/log/run.log
-      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 &>> /var/log/run.log || echo "JOIN ERROR: check /var/log/run.log"
-    
+      join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
+      $join >> /var/log/run.log || { service docker restart && sleep 10 && $join &>> /var/log/run.log || echo "JOIN ERROR: check /var/log/run.log; }
+      
   removeNode:
     - cmd[${nodes.cp.master.id}]: |-
         IFS=',' read -ra node <<< ${this.id}
