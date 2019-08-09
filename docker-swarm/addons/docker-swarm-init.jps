@@ -10,7 +10,7 @@ onInstall:
   - log: Swarm Init
   - init-swarm
   #giving some time for cluster recovery after clone 
-  - if ("${settings.oldIntIPs:}"): 
+  - if (false && "${settings.oldIntIPs:}"): 
       cmd[${nodes.cp.master.id}]: service docker restart
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
@@ -56,7 +56,9 @@ actions:
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
       echo -e "\n\n-------------\n$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> /var/log/run.log
-      docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
+      init="docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}"
+      $init >> /var/log/run.log || { service docker restart && sleep 10 && $init >> /var/log/run.log; }
+      sleep 5; 
       nodes=$(docker node ls | awk '/Down|Unknown/' | awk '{print $1}')
       for n in $nodes; do docker node rm $n; done    
       
