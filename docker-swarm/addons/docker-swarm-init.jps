@@ -21,14 +21,14 @@ onInstall:
 onAfterClone:
   - get-ips: nodes.cp
   - install: 
-      jps: ${globals.swarmInit}
+      jps: /docker-swarm-init.jps
       envName: ${event.response.env.envName}      
       settings: 
         oldIntIPs: ${globals.ips}
 
 onAfterMigrate:
   if (!${event.params.isOnline}):
-    install: ${globals.swarmInit}
+    install: /docker-swarm-init.jps
 
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
