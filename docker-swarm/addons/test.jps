@@ -1,0 +1,7 @@
+---
+tyoe: update
+id: test
+name: test
+
+onInstall:
+- log: ${baseUrl}
