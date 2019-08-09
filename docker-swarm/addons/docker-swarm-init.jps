@@ -120,9 +120,8 @@ actions:
     - if ("${settings.clone:false}"):
         - sleep: 10000
         - cmd[${nodes.cp.master.id}]: |-
-            nodes=$(docker node ls)
-            echo $nodes
-            nodes=$(echo $nodes | awk '/Down/' | awk '{print $1}')
+            docker node ls
+            nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
             for n in $nodes; do docker node rm $n; done    
 
   get-manager-token: 
