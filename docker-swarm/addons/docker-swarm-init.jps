@@ -14,7 +14,7 @@ onInstall:
       cmd[${nodes.cp.master.id}]: service docker restart
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
-  - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1):
+  - if (false && "${settings.oldIntIPs:}" && nodes.cp.length > 1):
     - if (nodes.cp.length > 1):
       cmd[${nodes.cp.master.id}]: |-
         docker swarm leave --force &>> /var/log/run.log
