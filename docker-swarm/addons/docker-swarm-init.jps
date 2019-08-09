@@ -3,16 +3,20 @@ id: docker-swarm-init
 name: Docker Swarm Init
 
 onInstall:
+  #blocking requests to the old swarm
   - if ("${settings.oldIntIPs:}"):
-      cmd[cp,worker]: |-
-        IFS=',' read -ra ips <<< ${settings.oldIntIPs:}
-        for ip in "${ips[@]}"; do
-          iptables -t nat -A OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
-        done
+      nat: A
   - env.control.ExecDockerRunCmd[*]
   - log: Swarm Init
   - init-swarm
   - build-cluster
+  #rejoining master manager for udating --advertise-addr  
+  - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1):
+      - cmd[${nodes.cp.master.id}]: |-
+          docker swarm leave --force &>> /var/log/run.log
+          docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
+      - nat: D
+    
 
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
@@ -39,6 +43,13 @@ onBeforeScaleIn[worker]:
       id: ${globals.ids}
 
 actions:
+  nat:
+    cmd[cp,worker]: |-
+      IFS=',' read -ra ips <<< ${settings.oldIntIPs:}
+      for ip in "${ips[@]}"; do
+        iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
+      done
+  
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
       echo -e "\n\n-------------\n$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> /var/log/run.log
