@@ -9,6 +9,9 @@ onInstall:
   - env.control.ExecDockerRunCmd[*]
   - log: Swarm Init
   - init-swarm
+  #giving some time for cluster recovery after clone 
+  - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1): 
+      sleep: 10000
   - build-cluster
   #rejoining master manager for udating --advertise-addr  
   - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1):
