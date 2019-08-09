@@ -1,7 +1,0 @@
----
-type: update
-id: test
-name: test
-
-onInstall:
-- log: ${baseUrl}
