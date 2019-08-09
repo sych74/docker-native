@@ -37,10 +37,10 @@ onBeforeScaleIn[worker]:
 actions:
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
-      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
-      for n in $nodes; do docker node rm $n; done    
       docker swarm leave --force &>> /var/log/run.log
       docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
+      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
+      for n in $nodes; do docker node rm $n; done    
       
   get-ids:
     - setGlobals: 
