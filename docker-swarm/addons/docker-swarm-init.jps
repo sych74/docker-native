@@ -39,7 +39,7 @@ actions:
     cmd[${nodes.cp.master.id}]: |-
       #docker swarm leave --force &>> /var/log/run.log
       docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP} >> /var/log/run.log
-      nodes=$(docker node ls | awk '/Down/' | awk '{print $2}')
+      nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
       for n in $nodes; do docker node rm $n; done    
       
   get-ids:
