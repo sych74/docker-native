@@ -17,7 +17,7 @@ onInstall:
   - if ("${settings.oldIntIPs:}" && nodes.cp.length > 1):
       - cmd[${nodes.cp.master.id}]: |-
           docker swarm leave --force &>> /var/log/run.log
-          docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 --delay 10s>> /var/log/run.log
+          docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
       - nat: D
 
 onAfterScaleOut[worker]:
@@ -102,8 +102,9 @@ actions:
   
   connectNode:
     cmd[${this.id}]: |-
+      sleep $(shuf -i 0-10 -n 1)
       docker swarm leave --force &>> /var/log/run.log
-      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 --delay 10s &>> /var/log/run.log || echo "JOIN ERROR: check /var/log/run.log"
+      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 &>> /var/log/run.log || echo "JOIN ERROR: check /var/log/run.log"
     
   removeNode:
     - cmd[${nodes.cp.master.id}]: |-
