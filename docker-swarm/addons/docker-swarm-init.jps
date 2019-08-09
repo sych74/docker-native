@@ -17,9 +17,10 @@ onInstall:
   - if (${settings.clone:false} && nodes.cp.length > 1):
     - if (nodes.cp.length > 1):
       cmd[${nodes.cp.master.id}]: |-
-        docker swarm leave --force &>> /var/log/run.log
-        docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
-    - nat: D
+        docker node ls
+        #docker swarm leave --force &>> /var/log/run.log
+        #docker swarm join --token ${globals.manager-token} ${nodes.cp.last.intIP}:2377 >> /var/log/run.log
+  #- nat: D
 
 onAfterClone:
   - get-ips: nodes.cp
