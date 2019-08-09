@@ -102,7 +102,7 @@ actions:
   connectNode:
     cmd[${this.id}]: |-
       docker swarm leave --force &>> /var/log/run.log
-      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 &>> /var/log/run.log
+      docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377 &>> /var/log/run.log || echo "JOIN ERROR: check run.log"
     
   removeNode:
     - cmd[${nodes.cp.master.id}]: |-
