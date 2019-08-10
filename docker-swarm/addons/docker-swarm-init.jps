@@ -16,7 +16,7 @@ onInstall:
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
   #rejoining master manager for udating --advertise-addr  
-  - if (true && ${settings.clone:false} && nodes.cp.length > 1):
+  - if (${settings.clone:false} && nodes.cp.length > 1):
     - removeNode:
         id: ${nodes.cp.master.id}
     - cmd[${nodes.cp.last.id}]: |-
@@ -26,17 +26,10 @@ onInstall:
     - nat: D
 
 onAfterClone:
-  - get-ips: nodes.cp
-  - log: baseUrl = ${baseUrl}
-  - install: 
-      jps: /docker-swarm-init.jps
-      envName: ${event.response.env.envName}      
-      settings: 
-        clone: true
+  re-init-swarm: ${event.response.env.envName}
 
 onAfterMigrate:
-  if (!${event.params.isOnline}):
-    install: /docker-swarm-init.jps
+  re-init-swarm: ${event.response.env.envName}
 
 onAfterScaleOut[worker]:
   - get-ids: event.response.nodes
@@ -63,13 +56,6 @@ onBeforeScaleIn[worker]:
       id: ${globals.ids}
 
 actions:
-  nat:
-    cmd[cp,worker]: |-
-      IFS=',' read -ra ips <<< ${globals.oldIntIPs:}
-      for ip in "${ips[@]}"; do
-        iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
-      done
-  
   init-swarm:
     cmd[${nodes.cp.master.id}]: |-
       echo -e "\n\n-------------\n$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> /var/log/run.log
@@ -83,22 +69,10 @@ actions:
     - forEach(${this}):
         if (${@i.id} != ${nodes.cp.master.id}):
           add-id: ${@i.id}
-
+          
   add-id:
     setGlobals: 
       ids: ${globals.ids:}${globals.sep:}${this}
-      sep: ','
-      
-  get-ips:
-    - setGlobals: 
-        ips: ''
-        sep: ''
-    - forEach(${this}):
-        add-ip: ${@i.intIP}
-
-  add-ip:
-    setGlobals: 
-      ips: ${globals.ips:}${globals.sep:}${this}
       sep: ','
       
   build-cluster:    
@@ -155,3 +129,16 @@ actions:
           for id in "${node[@]}"; do
             docker node rm --force node$id-${env.domain} &>> /var/log/run.log    
           done
+  nat:
+    cmd[cp,worker]: |-
+      IFS=',' read -ra ips <<< ${globals.oldIntIPs:}
+      for ip in "${ips[@]}"; do
+        iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
+      done
+  
+  re-init-swarm:
+    - install: 
+      jps: /docker-swarm-init.jps
+      envName: ${this}      
+      settings: 
+        clone: true
