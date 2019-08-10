@@ -97,7 +97,7 @@ actions:
         - sleep: 10000
         - cmd[${nodes.cp.master.id}]: |-
             docker node ls
-            nodes=$(docker node ls | awk '/Down/' | awk '{print $1}')
+            nodes=$(docker node ls | awk '/Down|Unknown/' | awk '{print $1}')
             for n in $nodes; do docker node rm $n; done    
 
   get-manager-token: 
