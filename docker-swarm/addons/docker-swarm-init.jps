@@ -32,7 +32,7 @@ onInstall:
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
   #rejoining master manager for udating --advertise-addr  
-  - if (${settings.clone:false} && nodes.cp.length > 1):
+  - if (false && ${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
     - cmd[${nodes.cp.master.id}]: |-    
         total=${nodes.cp.length}
@@ -43,7 +43,7 @@ onInstall:
           [ "$active" == "$total" ] && { echo "All managers are active"; break; } || { echo "Active managers: $active"; sleep 30; }
         done
         [ "$active" == "$total" ] && {
-          echo -e "\n\n-------------\n$(date) -> Starting re-join of the master"
+          echo -e "\n\n-------------\n$(date) -> Starting re-join of the master" >> /var/log/run.log
           docker node demote $(hostname) &>> /var/log/run.log
           docker info &>> /var/log/run.log
           docker swarm leave --force &>> /var/log/run.log
