@@ -32,9 +32,16 @@ onInstall:
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
   #rejoining master manager for udating --advertise-addr  
-  - if (false && ${settings.clone:false} && nodes.cp.length > 1):
+  - if (${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
-    - cmd[${nodes.cp.master.id}]: |-
+    - cmd[${nodes.cp.master.id}]: |-    
+        for (( i=1; i<=10; i++ )); do 
+          nodes=$(docker node ls -f "role=manager" | grep -v ID)
+          total=$(wc -l <<< "$nodes")
+          echo "Total managers: $total" 
+          active=$(echo "$nodes" | grep -c Ready)
+          [ "$active" == "$total" ] && { echo "All managers are active"; break; } || { echo "Active managers: $active"; sleep 10; }
+        done        
         docker node ls
         docker node demote $(hostname) &>> /var/log/run.log
         docker swarm leave --force &>> /var/log/run.log
