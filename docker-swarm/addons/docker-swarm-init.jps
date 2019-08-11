@@ -27,7 +27,8 @@ onInstall:
             docker node rm --force $id &>> /var/log/run.log || echo "NODE RM ERR: $id"   
           done
       - cmd[${globals.ids}]: |- 
-          yes | rm -rf /var/lib/docker/swarm      
+          yes | rm -rf /var/lib/docker/swarm
+      - sleep: 30000
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
   - build-cluster
