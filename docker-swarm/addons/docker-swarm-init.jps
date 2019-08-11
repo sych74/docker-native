@@ -117,11 +117,11 @@ actions:
   connectNode:
     cmd[${this.id}]: |-
       log=/var/log/run.log
-      echo -e "\n\n-------------\n$(date) -> Connect $(hostname)";
+      echo -e "\n\n-------------\n$(date) -> Connect $(hostname)"
       leave="docker swarm leave --force"
       join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
       $join >> $log || service docker restart
-      #$join >> $log || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } }
+    #$join >> $log || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } }
 
   removeNode:
     - cmd[${this.id}]: |-
