@@ -152,7 +152,9 @@ actions:
         echo "$info" | grep Swarm 
         ! echo "$info" | grep Error && { break; } || { service docker restart && sleep 15 && $leave &>> $log; }
       done
-      
+      echo "Moving forward"
+      echo "Moving forward" >> $log  
+
   removeNode:
     - cmd[${this.id}]: |-
         log=/var/log/run.log
