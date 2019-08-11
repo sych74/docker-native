@@ -14,9 +14,9 @@ if (ipQuotas.array[0].value != 0 && ipQuotas.array[1].value > 0 && ipQuotas.arra
      if (r.nodes[i].nodeGroup == targetGroup)
          nodes.push(r.nodes[i].id);
    
-   resp.onAfterReturn = {
-       api: "env.binder.AttachExtIp["+nodes.join(',')+"]"
-    }
+   resp.onAfterReturn = [
+     "env.binder.AttachExtIp["+nodes.join(',')+"]"
+   ]
 };
 
 return resp;
