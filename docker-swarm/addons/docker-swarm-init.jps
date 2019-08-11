@@ -132,7 +132,7 @@ actions:
       echo -e "\n\n-------------\n$(date) -> Connect $(hostname)"
       leave="docker swarm leave --force"
       join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
-      $join &>> $log || { service docker restart && sleep 10 && { $join &>> $log || echo "JOIN ERR: check $log"; } }
+      $join &>> $log || { sleep 10 && docker info 2> /dev/null | grep 'Swarm: active' || { service docker restart && sleep 10 && { $join &>> $log || echo "JOIN ERR: check $log"; } } }
     #$join >> $log || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } }
 
   removeNode:
