@@ -21,7 +21,7 @@ onInstall:
       - removeNode: 
           id: ${globals.ids}
           manager: true  
-      - cmd[${nodes.cp.master.id}]: !- 
+      - cmd[${nodes.cp.master.id}]: |- 
           IFS=',' read -ra ids <<< ${globals.oldNIDs}
           for id in "${ids[@]}"; do
             docker node rm --force $id &>> /var/log/run.log || echo "NODE RM ERR: $id"   
