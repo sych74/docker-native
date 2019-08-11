@@ -142,7 +142,7 @@ actions:
     cmd[${this.id}]: |-
       log=/var/log/run.log
       leave="docker swarm leave --force"
-      join="docker swarm join --token SWMTKN-1-1ak33d5nolhykq48egsm98ku1gptwy8fj4fbv8zlh91e60l4b3-01ro9jacvlbox7k16nqijip8m 192.168.11.48:2377"
+      join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}  :2377"
       for (( i=1; i<=10; i++ )); do 
         attempt="Join attempt #$i"
         echo $attempt
@@ -167,20 +167,7 @@ actions:
         for id in "${node[@]}"; do
           docker node rm --force node$id-${env.domain} &>> /var/log/run.log || echo "NODE RM ERR: node$id-${env.domain}"   
         done
-
-  removeNodeOld:
-    - cmd[${nodes.cp.master.id}]: |-
-        IFS=',' read -ra node <<< ${this.id}
-        for id in "${node[@]}"; do
-          docker node demote node$id-${env.domain} &>> /var/log/run.log
-        done
-    - cmd[${this.id}]: docker swarm leave --force &>> /var/log/run.log
-    - if (${this.id} != ${nodes.cp.master.id}):
-        cmd[${nodes.cp.master.id}]: |-
-          IFS=',' read -ra node <<< ${this.id}
-          for id in "${node[@]}"; do
-            docker node rm --force node$id-${env.domain} &>> /var/log/run.log    
-          done
+        
   nat:
     cmd[cp,worker]: |-
       IFS=',' read -ra ips <<< ${globals.oldIntIPs:}
