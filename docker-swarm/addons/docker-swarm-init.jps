@@ -64,7 +64,7 @@ actions:
       log=/var/log/run.log
       echo -e "\n\n-------------\n$(date) -> Init Swarm: --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}" >> $log
       init="docker swarm init --force-new-cluster --advertise-addr ${nodes.cp.master.intIP}"
-      $init >> $log || { service docker restart && sleep 10 && $init >> $log; }
+      $init &>> $log || { service docker restart && sleep 10 && $init >> $log; }
       
   get-ids:
     - setGlobals: 
@@ -121,7 +121,7 @@ actions:
       echo -e "\n\n-------------\n$(date) -> Connect $(hostname)"
       leave="docker swarm leave --force"
       join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
-      $join >> $log || service docker restart
+      $join &>> $log || { service docker restart && sleep 10 && { $join &>> $log || echo "JOIN ERR: check $log"; } }
     #$join >> $log || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } }
 
   removeNode:
@@ -131,8 +131,6 @@ actions:
         [ ${this.manager:false} = true ] && docker node demote $(hostname) &>> $log
         docker swarm leave --force &>> $log
         echo $nid
-    - log: ${response.out}
-    - log: ${responses[0].out}
     - log: ${placeholders}
     - cmd[${nodes.cp.master.id}]: |-
         IFS=',' read -ra node <<< ${this.id}
