@@ -17,6 +17,7 @@ onInstall:
       docker node ls
   #rejoining master manager for udating --advertise-addr  
   - if (${settings.clone:false} && nodes.cp.length > 1):
+    - sleep: 10000
     - cmd[${nodes.cp.master.id}]: |-
         docker node ls
         docker node demote $(hostname) &>> /var/log/run.log
@@ -131,8 +132,8 @@ actions:
         docker swarm leave --force &>> $log
         echo $nid
     - log: ${response.out}
-    - log: ${response[1].out}
-    - log: ${response.out[1]}
+    - log: ${responses[0].out}
+    - log: ${placeholders}
     - cmd[${nodes.cp.master.id}]: |-
         IFS=',' read -ra node <<< ${this.id}
         for id in "${node[@]}"; do
