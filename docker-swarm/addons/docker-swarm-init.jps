@@ -178,7 +178,7 @@ actions:
   
   re-init-swarm:
     - install: 
-      jps: /docker-swarm-init.jps
-      envName: ${this}      
-      settings: 
-        clone: true
+        jps: /docker-swarm-init.jps
+        envName: ${this}      
+        settings: 
+          clone: true
