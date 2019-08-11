@@ -114,18 +114,24 @@ actions:
   
   connectNode:
     cmd[${this.id}]: |-
+      log=/var/log/run.log
       leave="docker swarm leave --force"
       join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
-      $join >> /var/log/run.log || { service docker restart && sleep 10 && { $leave &>> /var/log/run.log && $join &>> /var/log/run.log || echo "JOIN ERR: check /var/log/run.log"; } }
+      $join >> $log || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } }
 
   removeNode:
     - cmd[${this.id}]: |-
-        [ ${this.manager:false} = true ] && docker node demote $(hostname) &>> /var/log/run.log
-        docker swarm leave --force &>> /var/log/run.log
+        log=/var/log/run.log
+        nid=$(docker info 2> /dev/null | grep NodeID | awk '{print $2}')
+        [ ${this.manager:false} = true ] && docker node demote $(hostname) &>> $log
+        docker swarm leave --force &>> $log
+        echo $nid
+    - log: ${response.out}
+    - log: ${responses}
     - cmd[${nodes.cp.master.id}]: |-
         IFS=',' read -ra node <<< ${this.id}
         for id in "${node[@]}"; do
-          docker node rm --force node$id-${env.domain} &>> /var/log/run.log    
+          docker node rm --force node$id-${env.domain} &>> /var/log/run.log || echo "NODE RM ERR: node$id-${env.domain}"   
         done
 
   removeNodeOld:
