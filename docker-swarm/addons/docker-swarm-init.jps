@@ -141,11 +141,18 @@ actions:
   connectNode:
     cmd[${this.id}]: |-
       log=/var/log/run.log
-      echo -e "\n\n-------------\n$(date) -> Connect $(hostname)"
       leave="docker swarm leave --force"
-      join="docker swarm join --token ${this.token} ${nodes.cp.master.intIP}:2377"
-      $join &>> $log || { sleep 10 && ! docker info 2> /dev/null | grep Error || { service docker restart && sleep 10 && { $leave &>> $log && $join &>> $log || echo "JOIN ERR: check $log"; } } }
-
+      join="docker swarm join --token SWMTKN-1-1ak33d5nolhykq48egsm98ku1gptwy8fj4fbv8zlh91e60l4b3-01ro9jacvlbox7k16nqijip8m 192.168.11.48:2377"
+      for (( i=1; i<=10; i++ )); do 
+        attempt="Join attempt #$i"
+        echo $attempt
+        echo $attempt >> $log  
+        $join &>> $log && { break; } || { sleep 15; }
+        info=$(docker info 2> /dev/null)
+        echo "$info" | grep Swarm 
+        ! echo "$info" | grep Error && { break; } || { service docker restart && sleep 15 && $leave &>> $log; }
+      done
+      
   removeNode:
     - cmd[${this.id}]: |-
         log=/var/log/run.log
