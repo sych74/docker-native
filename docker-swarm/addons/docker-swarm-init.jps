@@ -150,7 +150,7 @@ actions:
         $join &>> $log && { break; } || { sleep 15; }
         info=$(docker info 2> /dev/null)
         echo "$info" | grep Swarm 
-        ! echo "$info" | grep Error && { break; } || { service docker restart && sleep 15 && $leave &>> $log; }
+        ! echo "$info" | grep -E "Error|Swarm: inactive" && { break; } || { service docker restart && sleep 15 && $leave &>> $log; }
       done
       echo "Moving forward"
       echo "Moving forward" >> $log  
