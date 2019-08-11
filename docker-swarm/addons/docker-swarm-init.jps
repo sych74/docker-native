@@ -32,7 +32,7 @@ onInstall:
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
   #rejoining master manager for udating --advertise-addr  
-  - if (false ${settings.clone:false} && nodes.cp.length > 1):
+  - if (false && ${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
     - cmd[${nodes.cp.master.id}]: |-
         docker node ls
