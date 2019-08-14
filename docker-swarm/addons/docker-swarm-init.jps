@@ -18,16 +18,18 @@ onInstall:
     #remove old cluster nodes 
   - if (${settings.clone:false}):
       - get-ids: nodes.cp
-      - removeNode: 
-          id: ${globals.ids}
-          manager: true  
+      - if (nodes.cp.length > 1):
+          removeNode: 
+            id: ${globals.ids}
+            manager: true  
       - cmd[${nodes.cp.master.id}]: |- 
           IFS=',' read -ra ids <<< ${globals.oldNIDs}
           for id in "${ids[@]}"; do
             docker node rm --force $id &>> /var/log/run.log || echo "NODE RM ERR: $id"   
           done
-      - cmd[${globals.ids}]: |- 
-          yes | rm -rf /var/lib/docker/swarm
+      - if (nodes.cp.length > 1):
+          cmd[${globals.ids}]: |- 
+            yes | rm -rf /var/lib/docker/swarm
   - build-cluster
   - cmd[${nodes.cp.master.id}]: |-
       docker node ls
