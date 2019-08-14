@@ -17,22 +17,23 @@ onInstall:
   - init-swarm
     #remove old cluster nodes 
   - if (${settings.clone:false}):
-      - get-ids: nodes.cp
       - if (nodes.cp.length > 1):
-          removeNode: 
+        - get-ids: nodes.cp
+        - removeNode: 
             id: ${globals.ids}
             manager: true  
+        - cmd[${globals.ids}]: |- 
+            yes | rm -rf /var/lib/docker/swarm
       - cmd[${nodes.cp.master.id}]: |- 
           IFS=',' read -ra ids <<< ${globals.oldNIDs}
           for id in "${ids[@]}"; do
             docker node rm --force $id &>> /var/log/run.log || echo "NODE RM ERR: $id"   
           done
-      - if (nodes.cp.length > 1):
-          cmd[${globals.ids}]: |- 
-            yes | rm -rf /var/lib/docker/swarm
   - build-cluster
-  - cmd[${nodes.cp.master.id}]: |-
-      docker node ls
+   #for debugging
+  - if (${settings.clone:false}):
+      cmd[${nodes.cp.master.id}]: |-
+        docker node ls
   #rejoining master manager for udating --advertise-addr  
   - if (false && ${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
@@ -111,12 +112,13 @@ actions:
       sep: ','
       
   build-cluster:    
-    - log: Connecting Manager Nodes
-    - get-ids: nodes.cp
-    - get-manager-token
-    - connectNode: 
-        id: ${globals.ids}
-        token: ${globals.manager-token}
+    - if (nodes.cp.length > 1):    
+      - log: Connecting Manager Nodes
+      - get-ids: nodes.cp
+      - get-manager-token
+      - connectNode: 
+          id: ${globals.ids}
+          token: ${globals.manager-token}
         
     - log: Connecting Worker Nodes
     - get-worker-token
