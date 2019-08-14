@@ -16,14 +16,13 @@ onInstall:
   - log: Swarm Init
   - init-swarm
     #remove old cluster nodes 
-  - if (${settings.clone:false}):
-      - if (nodes.cp.length > 1):
-        - get-ids: nodes.cp
-        - removeNode: 
-            id: ${globals.ids}
-            manager: true  
-        - cmd[${globals.ids}]: |- 
-            yes | rm -rf /var/lib/docker/swarm
+  - if (${settings.clone:false} && nodes.cp.length > 1):
+      - get-ids: nodes.cp
+      - removeNode: 
+          id: ${globals.ids}
+          manager: true  
+      - cmd[${globals.ids}]: |- 
+          yes | rm -rf /var/lib/docker/swarm
       - cmd[${nodes.cp.master.id}]: |- 
           IFS=',' read -ra ids <<< ${globals.oldNIDs}
           for id in "${ids[@]}"; do
