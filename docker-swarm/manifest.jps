@@ -94,6 +94,7 @@ onInstall:
   - install: /addons/docker-swarm-init.jps?_r=${fn.random}
   - if ('${settings.stack}' == 'deploy'): deploy
   - portainer
+  - get-tokens
  
 actions:
   deploy:
@@ -124,6 +125,14 @@ actions:
 
   addExtIp:
     script: ../addons/scripts/attach-external-ip.js?_r=${fn.random}
+
+  get-tokens: 
+    - cmd[${nodes.cp.master.id}]: docker swarm join-token -q manager
+    - setGlobals:
+        manager-token: ${response.out}        
+    - cmd[${nodes.cp.master.id}]: docker swarm join-token -q worker
+    - setGlobals:
+        worker-token: ${response.out}
 
 startPage: ${globals.startPage}      
 success: /text/success.md
