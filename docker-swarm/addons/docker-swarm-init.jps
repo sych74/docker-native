@@ -31,8 +31,9 @@ onInstall:
   - build-cluster
    #for debugging
   - if (${settings.clone:false}):
-      cmd[${nodes.cp.master.id}]: |-
-        docker node ls
+      - cmd[${nodes.cp.master.id}]: |-
+          docker node ls
+      - restartContainers[worker]
   #rejoining master manager for udating --advertise-addr  
   - if (false && ${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
@@ -57,7 +58,6 @@ onInstall:
     #    docker node rm --force node${nodes.cp.master.id}-${env.domain} &>> /var/log/run.log || echo "REMOVE ERR: check /var/log/run.log"
     - if (response.out.indexOf("WARNING") == -1): 
         nat: D
-    - restartContainers[worker]
 
 onAfterClone:
   re-init-swarm: ${event.response.env.envName}
