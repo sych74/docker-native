@@ -176,7 +176,8 @@ actions:
     cmd[cp,worker]: |-
       IFS=',' read -ra ips <<< ${globals.oldIntIPs:}
       for ip in "${ips[@]}"; do
-        iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}  
+        iptables -t nat -${this} OUTPUT -p tcp -d $ip -j DNAT --to-destination ${nodes.cp.master.intIP}
+        service iptables save
       done
   
   re-init-swarm:
