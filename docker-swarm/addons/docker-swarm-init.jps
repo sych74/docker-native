@@ -57,6 +57,7 @@ onInstall:
     #    docker node rm --force node${nodes.cp.master.id}-${env.domain} &>> /var/log/run.log || echo "REMOVE ERR: check /var/log/run.log"
     - if (response.out.indexOf("WARNING") == -1): 
         nat: D
+    - restartContainers[worker]
 
 onAfterClone:
   re-init-swarm: ${event.response.env.envName}
