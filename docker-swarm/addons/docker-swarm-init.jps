@@ -33,9 +33,12 @@ onInstall:
   - if (${settings.clone:false}):
       - cmd[${nodes.cp.master.id}]: |-
           docker node ls
-      - cmd[worker]: |-
-          service docker restart
-          reboot
+      - forEach(nodes.cp):
+          - restartContainer[${@i.id}]
+          - sleep: 5000
+      - forEach(nodes.worker):
+          - restartContainer[${@i.id}]
+          - sleep: 5000
   #rejoining master manager for udating --advertise-addr  
   - if (false && ${settings.clone:false} && nodes.cp.length > 1):
     - sleep: 10000
