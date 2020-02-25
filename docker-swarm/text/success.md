@@ -3,14 +3,14 @@ You can use Jelastic [SSH Gate](https://docs.jelastic.com/ssh-gate) to establish
 ### Add a Manager node to the cluster
 ```
 docker swarm join --token \
-${globals.manager_token} \
+${globals.manager-token} \
 ${nodes.cp.master.intIP}:2377
 ```
 
 ### Add a Worker node to the cluster
 ```
 docker swarm join --token \
-${globals.worker_token} \
+${globals.worker-token} \
 ${nodes.cp.master.intIP}:2377
 ```
 

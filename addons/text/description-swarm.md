@@ -1,1 +1,0 @@
-Use this package to perform *docker stack deploy*. For *docker build*, *docker run* and *docker-compose*, use standalone Docker Engine from the [dedicated package](https://github.com/jelastic-jps/docker-native/tree/master/docker-engine).
